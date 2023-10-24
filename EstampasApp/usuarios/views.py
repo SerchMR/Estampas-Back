@@ -23,14 +23,15 @@ def login(request):
         # Redirigir al usuario a la URL especificada en el diccionario JSON
         response['Location'] = response_data["redireccion"]
         try:
-            usuarioObtenido = Usuario.objects.filter(usuario=request.GET.get('usuario'))
-            print(usuarioObtenido)
+            usuarioObtenido = Usuario.objects.get(usuario=request.GET.get('usuario'))
+            print("usuario obtenido", usuarioObtenido)
         except Usuario.DoesNotExist:
             usuarioObtenido = None
+            return HttpResponse('No existe el usuario')
         #caso cliente
         if request.GET.get('rol') == 'cliente':
             try:
-                cliente = Cliente.objects.filter(tipoidusuario=usuarioObtenido.tipoid, numidusuario=usuarioObtenido.numid)
+                cliente = Cliente.objects.get(tipoidusuario=usuarioObtenido.tipoid, numidusuario=usuarioObtenido.numid)
             except Usuario.DoesNotExist:
                 cliente = None
             if  usuarioObtenido is not None and cliente is not None:
@@ -43,8 +44,8 @@ def login(request):
         #caso Artista
         if request.GET.get('rol') == 'artista':
             try:
-                artista = Artista.objects.filter(tipoidusuario=usuarioObtenido.tipoid, numidusuario=usuarioObtenido.numid)
-            except Usuario.DoesNotExist:
+                artista = Artista.objects.get(tipoidusuario=usuarioObtenido.tipoid, numidusuario=usuarioObtenido.numid)
+            except Artista.DoesNotExist:
                 artista = None
             if  usuarioObtenido is not None and artista is not None:
                 if(usuarioObtenido.contrasena == request.GET.get('contrasena')):
@@ -56,8 +57,8 @@ def login(request):
         #caso admin
         if request.GET.get('rol') == 'admin':
             try:
-                admin = Admin.objects.filter(tipoidusuario=usuarioObtenido.tipoid, numidusuario=usuarioObtenido.numid)
-            except Usuario.DoesNotExist:
+                admin = Admin.objects.get(tipoidusuario=usuarioObtenido.tipoid, numidusuario=usuarioObtenido.numid)
+            except Admin.DoesNotExist:
                 admin = None
             if  usuarioObtenido is not None and admin is not None:
                 if(usuarioObtenido.contrasena == request.GET.get('contrasena')):
@@ -83,11 +84,22 @@ def registro(request):
         #registro usuario        
         print(request.GET.get('tipoid'))
         print(request.GET.get('numid'))
+        print(request.GET.get('usuario'))
         
-        nuevo_usuario = Usuario(tipoid=request.GET.get('tipoid'), numid=request.GET.get('numid'),
+        try:
+            usuario = Usuario.objects.get(tipoid=request.GET.get('tipoid'), numid=request.GET.get('numid'))
+        except Usuario.DoesNotExist:
+            usuario = None
+        if  usuario is not None:
+            return HttpResponse('El usuario no es valido')
+        else:
+            nuevo_usuario = Usuario(tipoid=request.GET.get('tipoid'), numid=request.GET.get('numid'),
                                         nombre=request.GET.get('nombre'), apellido=request.GET.get('apellido')
                                         , genero=request.GET.get('genero'), correo=request.GET.get('correo'),
                                         usuario=request.GET.get('usuario'), contrasena=request.GET.get('contrasena'))
+                
+
+
         print(nuevo_usuario)
         nuevo_usuario.save()
         print("se creo usuario")
